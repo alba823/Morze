@@ -4,6 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -14,12 +15,12 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.morze.extensions.timedClick
-import com.example.morze.ui.theme.AppleGreen
 import com.example.morze.ui.theme.Emerald
 import com.example.morze.ui.theme.MorzeTheme
 import com.example.morze.ui.theme.Tomato
@@ -47,6 +48,7 @@ class MainActivity : ComponentActivity() {
                         Decoder(
                             text = viewModel.decodedText.value,
                             timer = viewModel.timer,
+                            flag = viewModel.flag.value,
                             onClickResult = viewModel::onCodeInput,
                             onScreenChange = { currentScreen = Screen.Encoder },
                             onClearText = viewModel::reset,
@@ -56,25 +58,26 @@ class MainActivity : ComponentActivity() {
                                 } else {
                                     viewModel.stopBeep()
                                 }
-                            }
+                            },
+                            onLanguageSwitch = viewModel::onLanguageSwitch
                         )
                     }
                     Screen.Encoder -> {
                         Encoder(
                             inputText = viewModel.inputText.value,
                             outputText = viewModel.encodedText.value,
+                            flag = viewModel.flag.value,
                             onTextChange = viewModel::encodeCharacter,
                             onScreenChange = { currentScreen = Screen.Decoder },
                             onPlayClick = viewModel::onPlay,
-                            onClearText = viewModel::onClearText
+                            onClearText = viewModel::onClearText,
+                            onLanguageSwitch = viewModel::onLanguageSwitch
                         )
                     }
                 }
             }
         }
     }
-
-
 }
 
 @ExperimentalFoundationApi
@@ -82,10 +85,12 @@ class MainActivity : ComponentActivity() {
 fun Decoder(
     text: String,
     timer: RecognitionTimer,
+    flag: Flag,
     onClickResult: ListenerBoolParam,
     onScreenChange: Listener,
     onClearText: Listener,
-    onInteraction: ListenerBoolParam
+    onInteraction: ListenerBoolParam,
+    onLanguageSwitch: Listener
 ) {
     Surface(
         modifier = Modifier
@@ -100,29 +105,52 @@ fun Decoder(
         color = MaterialTheme.colors.background
     ) {
         Box(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(horizontal = 24.dp),
             Alignment.Center
         ) {
             Text(
                 text = text,
                 style = MaterialTheme.typography.body1
             )
-            Surface(
+            Row(
                 modifier = Modifier
-                    .size(150.dp)
-                    .align(Alignment.BottomCenter)
+                    .fillMaxWidth()
                     .padding(24.dp)
-                    .timedClick(
-                        enabled = true,
-                        timer = timer,
-                        timeInMillis = LONG_CLICK_DURATION,
-                        onClickResult = onClickResult,
-                        onInteraction = onInteraction
+                    .align(Alignment.BottomCenter),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Spacer(modifier = Modifier.width(80.dp))
+                Surface(
+                    modifier = Modifier
+                        .size(120.dp)
+                        .timedClick(
+                            enabled = true,
+                            timer = timer,
+                            timeInMillis = LONG_CLICK_DURATION,
+                            onClickResult = onClickResult,
+                            onInteraction = onInteraction
+                        ),
+                    color = Tomato,
+                    shape = RoundedCornerShape(100),
+                    content = {}
+                )
+                Image(
+                    modifier = Modifier
+                        .width(80.dp)
+                        .clickable(
+                            onClick = onLanguageSwitch
+                        ),
+                    painter = painterResource(
+                        id =
+                        if (flag == Flag.England) R.drawable.flag_of_the_united_kingdom_svg
+                        else R.drawable.flag_of_ukraine_svg
                     ),
-                color = Tomato,
-                shape = RoundedCornerShape(100),
-                content = {}
-            )
+                    contentDescription = "Country Flag"
+                )
+            }
         }
     }
 }
@@ -132,10 +160,12 @@ fun Decoder(
 fun Encoder(
     inputText: String,
     outputText: String,
+    flag: Flag,
     onTextChange: ListenerStringParam,
     onScreenChange: Listener,
     onPlayClick: Listener,
-    onClearText: Listener
+    onClearText: Listener,
+    onLanguageSwitch: Listener
 ) {
     Surface(
         modifier = Modifier
@@ -143,7 +173,7 @@ fun Encoder(
             .combinedClickable(
                 interactionSource = MutableInteractionSource(),
                 indication = null,
-                onClick = {},
+                onClick = { },
                 onDoubleClick = onScreenChange,
                 onLongClick = onClearText,
             ),
@@ -172,18 +202,39 @@ fun Encoder(
                 textAlign = TextAlign.Center,
                 style = MaterialTheme.typography.body1.copy(fontSize = 28.sp)
             )
-            Surface(
+            Row(
                 modifier = Modifier
-                    .size(150.dp)
-                    .align(Alignment.BottomCenter)
+                    .fillMaxWidth()
                     .padding(24.dp)
-                    .clickable(
-                        onClick = onPlayClick
+                    .align(Alignment.BottomCenter),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Spacer(modifier = Modifier.width(80.dp))
+                Surface(
+                    modifier = Modifier
+                        .size(120.dp)
+                        .clickable(
+                            onClick = onPlayClick
+                        ),
+                    color = Emerald,
+                    shape = RoundedCornerShape(100),
+                    content = {}
+                )
+                Image(
+                    modifier = Modifier
+                        .width(80.dp)
+                        .clickable(
+                            onClick = onLanguageSwitch
+                        ),
+                    painter = painterResource(
+                        id =
+                        if (flag == Flag.England) R.drawable.flag_of_the_united_kingdom_svg
+                        else R.drawable.flag_of_ukraine_svg
                     ),
-                color = Emerald,
-                shape = RoundedCornerShape(100),
-                content = {}
-            )
+                    contentDescription = "Country Flag"
+                )
+            }
         }
     }
 }

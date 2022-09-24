@@ -5,6 +5,7 @@ import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.morze.utils.CodeMapUA
 import com.example.morze.utils.CodeMapUS
 import com.example.morze.utils.Constants.LETTER_RECOGNIZE_DURATION
 import com.example.morze.utils.RecognitionTimer
@@ -32,6 +33,11 @@ class MainViewModel @Inject constructor(
 
     private val charCode = mutableListOf<Boolean>()
 
+    private var currentLanguage = CodeMapUS
+
+    private val _flag = mutableStateOf(Flag.England)
+    val flag: State<Flag> = _flag
+
     init {
         mediaPlayer.start()
         mediaPlayer.pause()
@@ -45,7 +51,7 @@ class MainViewModel @Inject constructor(
     }
 
     private fun decodeCharacter() {
-        CodeMapUS[charCode]?.let { decodedChar ->
+        currentLanguage[charCode]?.let { decodedChar ->
             _decodedText.value = _decodedText.value.plus(decodedChar)
         }
         charCode.clear()
@@ -54,7 +60,7 @@ class MainViewModel @Inject constructor(
     fun encodeCharacter(text: String) {
         _encodedText.value = if (text.isNotBlank()) {
             text.lowercase().map { char ->
-                val pair = CodeMapUS
+                val pair = currentLanguage
                     .filter { it.value == char }
                     .takeIf { it.isNotEmpty() }
 
@@ -90,6 +96,15 @@ class MainViewModel @Inject constructor(
         _inputText.value = ""
     }
 
+    fun onLanguageSwitch() {
+        currentLanguage =
+            if (currentLanguage == CodeMapUS) CodeMapUA
+            else CodeMapUS
+        _flag.value =
+            if (_flag.value == Flag.England) Flag.Ukraine
+            else Flag.England
+    }
+
     fun onPlay() {
         viewModelScope.launch {
             encodedText.value.forEach { char ->
@@ -113,6 +128,10 @@ class MainViewModel @Inject constructor(
             }
         }
     }
+}
+
+enum class Flag {
+    Ukraine, England
 }
 
 private const val LONG_BEEP_DURATION = 500L

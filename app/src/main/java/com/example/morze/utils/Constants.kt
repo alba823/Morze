@@ -7,7 +7,7 @@ object Constants {
 
 val CodeNums = mapOf(
     listOf(true, true, true, true, true)        to '0',
-    listOf(false, false, true, true, true)      to '1',
+    listOf(false, true, true, true, true)       to '1',
     listOf(false, false, true, true, true)      to '2',
     listOf(false, false, false, true, true)     to '3',
     listOf(false, false, false, false, true)    to '4',
